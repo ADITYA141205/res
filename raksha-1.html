@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raksha — Emergency Response</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1D33;
+    --ink-soft:#4B5A6B;
+    --surface:#F5F7F9;
+    --card:#FFFFFF;
+    --line:#E3E8ED;
+    --red:#D62839;
+    --red-soft:#FCE7E8;
+    --teal:#12897D;
+    --teal-soft:#E1F3F0;
+    --amber:#C97A00;
+    --amber-soft:#FBEDD9;
+    --blue:#2B5FA8;
+    --blue-soft:#E7EEF8;
+    --navy:#0B1D33;
+    --navy-2:#12283F;
+    --radius-s:10px;
+    --radius-m:16px;
+    --radius-l:24px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#DDE3E8;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:28px 10px;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{font-family:'Manrope',sans-serif;}
+
+  .device{
+    width:390px;
+    max-width:100%;
+    background:var(--surface);
+    border-radius:36px;
+    box-shadow:0 30px 60px rgba(11,29,51,0.25);
+    overflow:hidden;
+    border:8px solid var(--navy);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    height:820px;
+  }
+
+  /* status strip */
+  .statusbar{
+    background:var(--navy);
+    color:#fff;
+    padding:10px 18px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  .statusbar .loc{display:flex;align-items:center;gap:6px;color:#CBD8E6;}
+  .dot-live{width:7px;height:7px;border-radius:50%;background:#3DDC97;box-shadow:0 0 0 3px rgba(61,220,151,.25);}
+
+  .app-header{
+    background:var(--navy);
+    color:#fff;
+    padding:2px 20px 18px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+  }
+  .app-header .greet{font-size:13px;color:#B9C7D8;margin:0 0 2px;}
+  .app-header h1{font-size:21px;margin:0;font-weight:800;}
+
+  .profile-btn{
+    width:46px;height:46px;border-radius:50%;flex:none;border:2px solid rgba(255,255,255,0.55);
+    background:var(--red) center/cover no-repeat;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:'Manrope';font-weight:800;font-size:15px;position:relative;padding:0;
+    box-shadow:0 4px 10px rgba(0,0,0,0.25);
+  }
+  .profile-btn .plus{
+    position:absolute;bottom:-2px;right:-2px;width:17px;height:17px;border-radius:50%;
+    background:var(--teal);border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;
+    font-size:10px;color:#fff;line-height:1;
+  }
+
+  /* ---- HEALTH PROFILE SHEET ---- */
+  .sheet.profile-sheet{max-height:88%;overflow-y:auto;text-align:left;}
+  .photo-row{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .photo-circle{
+    width:74px;height:74px;border-radius:50%;background:var(--surface) center/cover no-repeat;
+    border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;flex:none;
+    color:var(--ink-soft);font-size:11px;text-align:center;position:relative;overflow:hidden;
+  }
+  .photo-actions{display:flex;flex-direction:column;gap:6px;}
+  .photo-actions label{
+    background:var(--blue-soft);color:var(--blue);font-size:12px;font-weight:700;padding:8px 12px;
+    border-radius:10px;cursor:pointer;text-align:center;
+  }
+  .photo-actions span{font-size:10.5px;color:var(--ink-soft);}
+  .field{margin-bottom:12px;text-align:left;}
+  .field label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;}
+  .field input, .field select, .field textarea{
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:13px;
+    font-family:'Inter';color:var(--ink);background:#fff;
+  }
+  .field textarea{resize:none;min-height:52px;}
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+
+  .screens{flex:1;overflow-y:auto;position:relative;background:var(--surface);}
+  .screen{display:none;padding:16px 18px 90px;animation:fade .25s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* bottom nav */
+  .navbar{
+    position:absolute;bottom:0;left:0;right:0;
+    background:#fff;border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;align-items:center;
+    padding:10px 6px 14px;
+  }
+  .navbtn{
+    background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:#94A3B3;font-family:'Inter';font-size:10.5px;font-weight:600;cursor:pointer;padding:4px 6px;
+  }
+  .navbtn.active{color:var(--red);}
+  .navbtn svg{width:21px;height:21px;}
+
+  /* ---- SOS SCREEN ---- */
+  .sos-wrap{display:flex;flex-direction:column;align-items:center;padding-top:14px;}
+  .sos-ring{
+    width:172px;height:172px;border-radius:50%;
+    background:radial-gradient(circle at 30% 28%, #EF5A67, var(--red));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 10px rgba(214,40,57,0.10), 0 14px 30px rgba(214,40,57,0.35);
+    cursor:pointer;border:none;position:relative;
+  }
+  .sos-ring::before{
+    content:'';position:absolute;inset:-14px;border-radius:50%;
+    border:2px solid rgba(214,40,57,0.35);
+    animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{0%{transform:scale(0.9);opacity:.9;}100%{transform:scale(1.35);opacity:0;}}
+  .sos-ring span{color:#fff;font-family:'Manrope';font-weight:800;font-size:26px;letter-spacing:.5px;}
+  .sos-caption{margin-top:16px;font-size:13px;color:var(--ink-soft);text-align:center;line-height:1.5;max-width:230px;}
+  .sos-caption b{color:var(--ink);}
+
+  .quickgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;}
+  .qcard{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius-m);
+    padding:14px 12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;
+    transition:border-color .15s;
+  }
+  .qcard:active{border-color:var(--ink-soft);}
+  .qcard .icn{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .qcard p{margin:0;font-size:12.5px;font-weight:700;color:var(--ink);}
+  .qcard span{font-size:11px;color:var(--ink-soft);}
+
+  .section-title{font-size:14px;font-weight:800;margin:24px 0 10px;color:var(--ink);}
+  .activity{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-m);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;margin-bottom:8px;}
+  .activity .badge{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;}
+  .activity h4{margin:0 0 2px;font-size:12.5px;font-weight:700;}
+  .activity p{margin:0;font-size:11.5px;color:var(--ink-soft);}
+
+  /* ---- overlay: SOS confirm/countdown/dispatched ---- */
+  .overlay{
+    position:absolute;inset:0;background:rgba(11,29,51,0.55);
+    display:none;align-items:flex-end;justify-content:center;z-index:20;
+  }
+  .overlay.active{display:flex;}
+  .sheet{
+    background:#fff;width:100%;border-radius:26px 26px 0 0;padding:26px 22px 30px;
+    text-align:center;animation:slideup .25s ease;
+  }
+  @keyframes slideup{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet h2{margin:0 0 6px;font-size:18px;}
+  .sheet p{margin:0 0 18px;font-size:13px;color:var(--ink-soft);line-height:1.5;}
+  .count{font-family:'Manrope';font-weight:800;font-size:44px;color:var(--red);margin:6px 0 18px;}
+  .btnrow{display:flex;gap:10px;}
+  .btn{flex:1;padding:13px;border-radius:12px;border:none;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Inter';}
+  .btn.primary{background:var(--red);color:#fff;}
+  .btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  .dispatch-row{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;}
+  .dispatch-row .av{width:40px;height:40px;border-radius:50%;background:var(--teal-soft);display:flex;align-items:center;justify-content:center;flex:none;}
+  .dispatch-row h4{margin:0;font-size:13px;}
+  .dispatch-row p{margin:2px 0 0;font-size:11.5px;color:var(--ink-soft);}
+
+  /* ---- HOSPITALS SCREEN ---- */
+  .filterrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+  .chip{flex:none;padding:7px 13px;border-radius:20px;background:#fff;border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;}
+  .chip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .hcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-m);padding:14px;margin-bottom:12px;}
+  .hcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .hcard-top h3{margin:0 0 3px;font-size:14.5px;}
+  .hcard-top .meta{font-size:11.5px;color:var(--ink-soft);}
+  .eta-pill{background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;white-space:nowrap;}
+  .stockgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;}
+  .stockcell{border-radius:9px;padding:6px 4px;text-align:center;}
+  .stockcell .g{font-size:11px;font-weight:800;}
+  .stockcell .n{font-size:9.5px;margin-top:1px;}
+  .ok{background:var(--teal-soft);color:var(--teal);}
+  .low{background:var(--amber-soft);color:var(--amber);}
+  .out{background:var(--red-soft);color:var(--red);}
+  .o2row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;}
+  .o2row b{color:var(--ink);}
+  .hcard-actions{display:flex;gap:8px;}
+  .hcard-actions .btn{padding:10px;font-size:12.5px;}
+
+  /* ---- AMBULANCE SCREEN ---- */
+  .mapbox{
+    height:210px;border-radius:var(--radius-m);position:relative;overflow:hidden;
+    background:
+      linear-gradient(0deg, rgba(43,95,168,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(43,95,168,0.06) 1px, transparent 1px),
+      #E9EEF4;
+    background-size:22px 22px;
+    border:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .route-line{position:absolute;top:0;left:0;width:100%;height:100%;}
+  .pin{position:absolute;width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;}
+  .pin.you{background:var(--blue);top:150px;left:44px;}
+  .pin.hosp{background:var(--teal);top:26px;left:250px;}
+  .pin span{transform:rotate(45deg);color:#fff;font-size:12px;font-weight:800;}
+  .signalbadge{position:absolute;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 7px;font-size:9.5px;font-weight:700;display:flex;align-items:center;gap:4px;box-shadow:0 3px 8px rgba(0,0,0,0.08);}
+  .sig1{top:64px;left:120px;}
+  .sig2{top:96px;left:190px;}
+  .glow{width:6px;height:6px;border-radius:50%;background:#3DDC97;}
+
+  .routeinfo{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-m);padding:14px;margin-bottom:14px;}
+  .routeinfo .col{flex:1;text-align:center;border-right:1px solid var(--line);}
+  .routeinfo .col:last-child{border-right:none;}
+  .routeinfo .col b{display:block;font-family:'Manrope';font-size:16px;font-weight:800;}
+  .routeinfo .col span{font-size:10.5px;color:var(--ink-soft);}
+
+  .steplist{list-style:none;margin:0;padding:0;}
+  .step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .step:last-child{border-bottom:none;}
+  .stepdot{width:22px;height:22px;border-radius:50%;background:var(--blue-soft);color:var(--blue);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;}
+  .step.done .stepdot{background:var(--teal);color:#fff;}
+  .step p{margin:0;font-size:12.5px;font-weight:600;}
+  .step span{font-size:11px;color:var(--ink-soft);}
+
+  .prioritybanner{display:flex;align-items:center;gap:10px;background:var(--navy);color:#fff;border-radius:14px;padding:12px 14px;margin-bottom:14px;}
+  .prioritybanner p{margin:0;font-size:12px;font-weight:700;}
+  .prioritybanner span{font-size:10.5px;color:#AFC0D4;display:block;margin-top:1px;}
+
+  /* ---- RECORDS SCREEN ---- */
+  .lockbox{text-align:center;padding:34px 10px 10px;}
+  .lockicon{width:60px;height:60px;border-radius:50%;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .lockbox h3{margin:0 0 8px;font-size:16px;}
+  .lockbox p{margin:0 0 22px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;padding:0 8px;}
+  .inputrow{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;text-align:left;margin-bottom:12px;}
+  .inputrow label{font-size:10.5px;color:var(--ink-soft);font-weight:700;display:block;margin-bottom:4px;}
+  .inputrow .val{font-size:13px;font-weight:600;color:var(--ink);}
+
+  .patientcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-m);padding:16px;margin-bottom:14px;}
+  .patienthead{display:flex;gap:12px;align-items:center;margin-bottom:14px;}
+  .avatar{width:48px;height:48px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Manrope';font-weight:800;font-size:16px;flex:none;}
+  .patienthead h3{margin:0;font-size:15px;}
+  .patienthead span{font-size:11.5px;color:var(--ink-soft);}
+  .tag{display:inline-block;background:var(--red-soft);color:var(--red);font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:8px;margin:2px 6px 0 0;}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  .info-grid .cell span{display:block;font-size:10px;color:var(--ink-soft);font-weight:700;margin-bottom:2px;}
+  .info-grid .cell b{font-size:13px;}
+  .medrow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .medrow:last-child{border-bottom:none;}
+  .medrow span{color:var(--ink-soft);font-size:11.5px;}
+  .accesslog{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:6px;}
+
+  /* ---- SIMPLIFY SCREEN ---- */
+  .taparea{background:#fff;border:1.5px dashed var(--line);border-radius:var(--radius-m);padding:16px;font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6;}
+  .examplebtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .exbtn{background:var(--blue-soft);color:var(--blue);border:none;padding:8px 12px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;}
+  .translatebox{background:var(--navy);color:#fff;border-radius:var(--radius-m);padding:16px;display:none;}
+  .translatebox.show{display:block;}
+  .translatebox h4{margin:0 0 10px;font-size:12px;color:#9FB3CB;font-weight:700;}
+  .plainline{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.12);}
+  .plainline:last-child{border-bottom:none;}
+  .plainline b{font-size:12.5px;color:#3DDC97;flex:none;width:78px;}
+  .plainline p{margin:0;font-size:12.5px;line-height:1.5;color:#E7EEF6;}
+
+  ::-webkit-scrollbar{width:0;}
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="statusbar">
+    <div class="loc"><span class="dot-live"></span> Live location: Rajpur Rd, Dehradun</div>
+    <div>9:41</div>
+  </div>
+  <div class="app-header">
+    <div>
+      <p class="greet">Good evening</p>
+      <h1>Raksha</h1>
+    </div>
+    <button class="profile-btn" id="profileBtn" onclick="openProfile()">
+      <span id="avatarInitials">RS</span>
+      <span class="plus">+</span>
+    </button>
+  </div>
+
+  <div class="screens">
+
+    <!-- SOS SCREEN -->
+    <div class="screen active" id="screen-sos">
+      <div class="sos-wrap">
+        <button class="sos-ring" onclick="openSOS()"><span>SOS</span></button>
+        <p class="sos-caption">Tap and hold in a real emergency. Your <b>live location</b> and medical ID are sent instantly to the nearest ambulance and control room.</p>
+      </div>
+
+      <div class="quickgrid">
+        <div class="qcard" onclick="quickReport('Accident')">
+          <div class="icn" style="background:var(--red-soft)">🚑</div>
+          <p>Road accident</p><span>Nearest ambulance in 4 min</span>
+        </div>
+        <div class="qcard" onclick="quickReport('Fire')">
+          <div class="icn" style="background:var(--amber-soft)">🔥</div>
+          <p>Fire emergency</p><span>Alerts fire + control room</span>
+        </div>
+        <div class="qcard" onclick="quickReport('Flood')">
+          <div class="icn" style="background:var(--blue-soft)">🌊</div>
+          <p>Flood / rescue</p><span>Notifies NDRF team</span>
+        </div>
+        <div class="qcard" onclick="quickReport('Medical')">
+          <div class="icn" style="background:var(--teal-soft)">🩺</div>
+          <p>Medical crisis</p><span>Shares your medical ID</span>
+        </div>
+      </div>
+
+      <p class="section-title">Recent activity</p>
+      <div class="activity">
+        <div class="badge" style="background:var(--teal)"></div>
+        <div><h4>Ambulance reached hospital</h4><p>Doon Medical College · resolved · 2 days ago</p></div>
+      </div>
+      <div class="activity">
+        <div class="badge" style="background:var(--blue)"></div>
+        <div><h4>Medical ID shared with Dr. Kapoor</h4><p>Verified responder access · 6 days ago</p></div>
+      </div>
+    </div>
+
+    <!-- HOSPITALS SCREEN -->
+    <div class="screen" id="screen-hosp">
+      <p class="section-title" style="margin-top:4px;">Nearby hospitals</p>
+      <div class="filterrow">
+        <div class="chip on">All</div>
+        <div class="chip">Blood available</div>
+        <div class="chip">Oxygen available</div>
+        <div class="chip">ICU beds</div>
+        <div class="chip">Govt.</div>
+      </div>
+
+      <div class="hcard">
+        <div class="hcard-top">
+          <div><h3>Doon Medical College</h3><div class="meta">Government · Multi-speciality · 2.3 km</div></div>
+          <div class="eta-pill">7 min</div>
+        </div>
+        <div class="stockgrid">
+          <div class="stockcell ok"><div class="g">O+</div><div class="n">14 units</div></div>
+          <div class="stockcell low"><div class="g">O−</div><div class="n">3 units</div></div>
+          <div class="stockcell ok"><div class="g">B+</div><div class="n">9 units</div></div>
+          <div class="stockcell out"><div class="g">AB−</div><div class="n">0 units</div></div>
+        </div>
+        <div class="o2row"><span>Oxygen cylinders</span><b style="color:var(--teal)">42 available</b></div>
+        <div class="hcard-actions">
+          <button class="btn ghost" onclick="alert('Reserving 1 unit — hospital notified with your request ID #RK-4471')">Reserve blood</button>
+          <button class="btn primary" onclick="switchTab('amb')">Send ambulance</button>
+        </div>
+      </div>
+
+      <div class="hcard">
+        <div class="hcard-top">
+          <div><h3>Max Super Speciality</h3><div class="meta">Private · Trauma centre · 3.8 km</div></div>
+          <div class="eta-pill">11 min</div>
+        </div>
+        <div class="stockgrid">
+          <div class="stockcell ok"><div class="g">O+</div><div class="n">21 units</div></div>
+          <div class="stockcell ok"><div class="g">O−</div><div class="n">6 units</div></div>
+          <div class="stockcell low"><div class="g">B+</div><div class="n">2 units</div></div>
+          <div class="stockcell ok"><div class="g">AB+</div><div class="n">8 units</div></div>
+        </div>
+        <div class="o2row"><span>Oxygen cylinders</span><b style="color:var(--amber)">Low · 6 left</b></div>
+        <div class="hcard-actions">
+          <button class="btn ghost" onclick="alert('Reserving 1 unit — hospital notified with your request ID #RK-4472')">Reserve blood</button>
+          <button class="btn primary" onclick="switchTab('amb')">Send ambulance</button>
+        </div>
+      </div>
+
+      <div class="hcard">
+        <div class="hcard-top">
+          <div><h3>Himalayan Institute</h3><div class="meta">Private · General · 6.1 km</div></div>
+          <div class="eta-pill">15 min</div>
+        </div>
+        <div class="stockgrid">
+          <div class="stockcell ok"><div class="g">O+</div><div class="n">10 units</div></div>
+          <div class="stockcell ok"><div class="g">A+</div><div class="n">12 units</div></div>
+          <div class="stockcell ok"><div class="g">B−</div><div class="n">5 units</div></div>
+          <div class="stockcell ok"><div class="g">AB+</div><div class="n">4 units</div></div>
+        </div>
+        <div class="o2row"><span>Oxygen cylinders</span><b style="color:var(--teal)">30 available</b></div>
+        <div class="hcard-actions">
+          <button class="btn ghost" onclick="alert('Reserving 1 unit — hospital notified with your request ID #RK-4473')">Reserve blood</button>
+          <button class="btn primary" onclick="switchTab('amb')">Send ambulance</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMBULANCE SCREEN -->
+    <div class="screen" id="screen-amb">
+      <p class="section-title" style="margin-top:4px;">Ambulance en route</p>
+
+      <div class="prioritybanner">
+        <div style="font-size:20px;">🚦</div>
+        <div><p>Green-corridor active</p><span>3 traffic signals set to auto-clear on this route</span></div>
+      </div>
+
+      <div class="mapbox">
+        <svg class="route-line" viewBox="0 0 390 210">
+          <path d="M60 160 C 120 150, 140 100, 160 90 S 230 50, 265 40" stroke="#2B5FA8" stroke-width="3" fill="none" stroke-dasharray="7 7"/>
+        </svg>
+        <div class="pin you"><span>🏠</span></div>
+        <div class="pin hosp"><span>H</span></div>
+        <div class="signalbadge sig1"><span class="glow"></span> Signal cleared</div>
+        <div class="signalbadge sig2"><span class="glow"></span> Signal cleared</div>
+      </div>
+
+      <div class="routeinfo">
+        <div class="col"><b>7 min</b><span>ETA to hospital</span></div>
+        <div class="col"><b>2.3 km</b><span>Fastest route</span></div>
+        <div class="col"><b>DL-4E</b><span>Ambulance ID</span></div>
+      </div>
+
+      <p class="section-title">Trip progress</p>
+      <ul class="steplist">
+        <li class="step done"><div class="stepdot">✓</div><div><p>SOS received &amp; location locked</p><span>9:41 PM</span></div></li>
+        <li class="step done"><div class="stepdot">✓</div><div><p>Ambulance DL-4E dispatched</p><span>9:42 PM</span></div></li>
+        <li class="step"><div class="stepdot">3</div><div><p>Traffic signals clearing route</p><span>in progress</span></div></li>
+        <li class="step"><div class="stepdot">4</div><div><p>Arriving at Doon Medical College</p><span>ETA 9:49 PM</span></div></li>
+      </ul>
+    </div>
+
+    <!-- RECORDS SCREEN -->
+    <div class="screen" id="screen-rec">
+      <div id="lockedView">
+        <div class="lockbox">
+          <div class="lockicon">🔒</div>
+          <h3>Verified responder access</h3>
+          <p>Patient medical history is encrypted. Only doctors and emergency responders with a verified ID can view it, and every access is logged and sent to the patient.</p>
+        </div>
+        <div class="inputrow"><label>Responder ID</label><div class="val">DR-2291 · Dr. Ananya Kapoor</div></div>
+        <div class="inputrow"><label>Patient reference</label><div class="val">Scanned from Raksha medical ID card</div></div>
+        <button class="btn primary" style="width:100%;padding:14px;" onclick="unlockRecord()">Verify &amp; view record</button>
+      </div>
+
+      <div id="unlockedView" style="display:none;">
+        <div class="patientcard">
+          <div class="patienthead">
+            <div class="avatar">RS</div>
+            <div><h3>Rohan Sharma, 34</h3><span>Blood group O+ · ID RK-88213</span></div>
+          </div>
+          <div>
+            <span class="tag">Penicillin allergy</span>
+            <span class="tag">Type 1 diabetic</span>
+          </div>
+          <div class="info-grid">
+            <div class="cell"><span>Emergency contact</span><b>Meera Sharma · 98xxx‑xx210</b></div>
+            <div class="cell"><span>Last known BP</span><b>128 / 82</b></div>
+            <div class="cell"><span>Existing conditions</span><b>Hypertension</b></div>
+            <div class="cell"><span>Organ donor</span><b>Yes</b></div>
+          </div>
+        </div>
+
+        <p class="section-title" style="margin-top:6px;">Current medication</p>
+        <div class="patientcard" style="padding:6px 16px;">
+          <div class="medrow"><div>Metformin 500mg<br><span>Twice daily, after meals</span></div></div>
+          <div class="medrow"><div>Insulin (Glargine)<br><span>1 unit, night</span></div></div>
+          <div class="medrow"><div>Telmisartan 40mg<br><span>Once daily, morning</span></div></div>
+        </div>
+        <p class="accesslog">🔔 Rohan Sharma has been notified that Dr. Kapoor viewed this record just now</p>
+      </div>
+    </div>
+
+    <!-- SIMPLIFY SCREEN -->
+    <div class="screen" id="screen-simp">
+      <p class="section-title" style="margin-top:4px;">Understand your prescription</p>
+      <div class="taparea">Paste a prescription line or medical term, or try an example below — Raksha explains it in plain language.</div>
+      <div class="examplebtns">
+        <button class="exbtn" onclick="translate('bp')">"Tab. Telmisartan 40mg OD"</button>
+        <button class="exbtn" onclick="translate('fracture')">"Hairline fracture, tibia"</button>
+        <button class="exbtn" onclick="translate('bloodtest')">"HbA1c: 7.8%"</button>
+      </div>
+
+      <div class="translatebox" id="tbox">
+        <h4>IN PLAIN LANGUAGE</h4>
+        <div id="tcontent"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="navbar">
+    <button class="navbtn active" data-tab="sos" onclick="switchTab('sos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 6.9L21 9.3l-5.4 4.6L17.4 21 12 17.3 6.6 21l1.8-7.1L3 9.3l6.6-.4z"/></svg>
+      SOS
+    </button>
+    <button class="navbtn" data-tab="hosp" onclick="switchTab('hosp')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.3-9.1C1.3 8.6 3 5 6.4 5 8.5 5 10 6.3 12 8.5 14 6.3 15.5 5 17.6 5 21 5 22.7 8.6 21.3 11.9 19 16.4 12 21 12 21z"/></svg>
+      Hospitals
+    </button>
+    <button class="navbtn" data-tab="amb" onclick="switchTab('amb')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="14" height="8" rx="1.5"/><path d="M16 12h4l2 3v2h-6z"/><circle cx="6.5" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/><path d="M6 12v-3h5v3"/></svg>
+      Ambulance
+    </button>
+    <button class="navbtn" data-tab="rec" onclick="switchTab('rec')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8a1 1 0 011 1v16l-5-3-5 3V4a1 1 0 011-1z"/></svg>
+      Records
+    </button>
+    <button class="navbtn" data-tab="simp" onclick="switchTab('simp')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Simplify
+    </button>
+  </div>
+
+  <!-- SOS overlay -->
+  <div class="overlay" id="overlay">
+    <div class="sheet" id="sheetContent"></div>
+  </div>
+
+  <!-- Health profile overlay -->
+  <div class="overlay" id="profileOverlay">
+    <div class="sheet profile-sheet">
+      <h2 style="margin-bottom:2px;">Your health ID</h2>
+      <p style="margin-bottom:16px;">Shown to verified doctors and responders only during an emergency.</p>
+
+      <div class="photo-row">
+        <div class="photo-circle" id="photoPreview">No photo</div>
+        <div class="photo-actions">
+          <label for="photoInput">Add / change photo</label>
+          <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="previewPhoto(event)">
+          <span>Helps responders identify you quickly</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Full name</label>
+        <input type="text" id="pf-name" value="Rohan Sharma">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Blood group</label>
+          <select id="pf-blood">
+            <option>O+</option><option>O−</option><option>A+</option><option>A−</option>
+            <option>B+</option><option>B−</option><option>AB+</option><option>AB−</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pf-age" value="34">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Allergies</label>
+        <input type="text" id="pf-allergies" value="Penicillin">
+      </div>
+
+      <div class="field">
+        <label>Existing conditions</label>
+        <input type="text" id="pf-conditions" value="Type 1 diabetes, Hypertension">
+      </div>
+
+      <div class="field">
+        <label>Current medication</label>
+        <textarea id="pf-meds">Metformin 500mg — twice daily
+Insulin (Glargine) — 1 unit, night</textarea>
+      </div>
+
+      <div class="field">
+        <label>Emergency contact (name &amp; number)</label>
+        <input type="text" id="pf-contact" value="Meera Sharma, 98xxx-xx210">
+      </div>
+
+      <div class="btnrow">
+        <button class="btn ghost" onclick="closeProfile()">Cancel</button>
+        <button class="btn primary" onclick="saveProfile()">Save health ID</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.navbtn[data-tab="'+tab+'"]').classList.add('active');
+}
+
+function quickReport(type){
+  openSOS(type);
+}
+
+let countdownTimer;
+function openSOS(type){
+  const overlay = document.getElementById('overlay');
+  const sheet = document.getElementById('sheetContent');
+  let n = 3;
+  sheet.innerHTML = `
+    <h2>${type ? type+' reported' : 'Confirm SOS'}</h2>
+    <p>Sending your live location and medical ID to the nearest ambulance and control room.</p>
+    <div class="count" id="cnt">${n}</div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="closeOverlay()">Cancel</button>
+      <button class="btn primary" onclick="dispatchNow()">Send now</button>
+    </div>`;
+  overlay.classList.add('active');
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(()=>{
+    n--;
+    const el = document.getElementById('cnt');
+    if(el) el.textContent = n;
+    if(n<=0){ clearInterval(countdownTimer); dispatchNow(); }
+  },1000);
+}
+
+function dispatchNow(){
+  clearInterval(countdownTimer);
+  const sheet = document.getElementById('sheetContent');
+  sheet.innerHTML = `
+    <h2>Help is on the way</h2>
+    <p>Your location was shared. Nearest resources have been notified.</p>
+    <div class="dispatch-row">
+      <div class="av">🚑</div>
+      <div><h4>Ambulance DL-4E · 4 min away</h4><p>Doon Medical College dispatch</p></div>
+    </div>
+    <div class="dispatch-row">
+      <div class="av">🏥</div>
+      <div><h4>Doon Medical College notified</h4><p>ICU bed &amp; O+ blood held for you</p></div>
+    </div>
+    <div class="dispatch-row">
+      <div class="av">👤</div>
+      <div><h4>Emergency contact alerted</h4><p>Meera Sharma received your location</p></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" style="width:100%" onclick="closeOverlay(); switchTab('amb');">Track ambulance</button>
+    </div>`;
+}
+
+function closeOverlay(){
+  clearInterval(countdownTimer);
+  document.getElementById('overlay').classList.remove('active');
+}
+
+function openProfile(){
+  document.getElementById('profileOverlay').classList.add('active');
+}
+function closeProfile(){
+  document.getElementById('profileOverlay').classList.remove('active');
+}
+function previewPhoto(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const preview = document.getElementById('photoPreview');
+    preview.style.backgroundImage = `url(${e.target.result})`;
+    preview.textContent = '';
+    document.getElementById('profileBtn').style.backgroundImage = `url(${e.target.result})`;
+    document.getElementById('avatarInitials').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function saveProfile(){
+  const name = document.getElementById('pf-name').value.trim();
+  if(name){
+    const initials = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    if(!document.getElementById('profileBtn').style.backgroundImage || document.getElementById('profileBtn').style.backgroundImage === ''){
+      document.getElementById('avatarInitials').textContent = initials;
+    }
+  }
+  closeProfile();
+  const sheet = document.getElementById('sheetContent');
+  const overlay = document.getElementById('overlay');
+  sheet.innerHTML = `
+    <h2>Health ID saved</h2>
+    <p>This will be shared automatically with responders when you send an SOS.</p>
+    <div class="btnrow"><button class="btn primary" style="width:100%" onclick="closeOverlay()">Done</button></div>`;
+  overlay.classList.add('active');
+}
+
+function unlockRecord(){
+  document.getElementById('lockedView').style.display='none';
+  document.getElementById('unlockedView').style.display='block';
+}
+
+const translations = {
+  bp: [
+    ['Drug','Telmisartan — a tablet that relaxes blood vessels to lower blood pressure.'],
+    ['Dose','40mg, one tablet.'],
+    ['OD','Means once a day — take it at the same time daily, usually morning.'],
+    ['Why','Prescribed to keep blood pressure controlled and protect the heart and kidneys.']
+  ],
+  fracture: [
+    ['Meaning','A hairline fracture is a thin crack in the bone — smaller than a full break.'],
+    ['Location','Tibia is the shin bone, between the knee and ankle.'],
+    ['Care','Usually treated with a cast or brace and rest; surgery is rarely needed.'],
+    ['Recovery','Typically heals in 4–6 weeks with limited weight on the leg.']
+  ],
+  bloodtest: [
+    ['Test','HbA1c measures your average blood sugar over the last 2–3 months.'],
+    ['Your value','7.8% is above the healthy range (below 5.7%) and indicates diabetes.'],
+    ['Target','Most people with diabetes aim for under 7%.'],
+    ['Next step','Your doctor may adjust medication and suggest diet or exercise changes.']
+  ]
+};
+
+function translate(key){
+  const box = document.getElementById('tbox');
+  const content = document.getElementById('tcontent');
+  content.innerHTML = translations[key].map(r=>`<div class="plainline"><b>${r[0]}</b><p>${r[1]}</p></div>`).join('');
+  box.classList.add('show');
+}
+</script>
+
+</body>
+</html>
